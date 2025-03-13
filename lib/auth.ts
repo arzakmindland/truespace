@@ -1,9 +1,9 @@
-import { NextAuthOptions } from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import GoogleProvider from 'next-auth/providers/google'
-import bcrypt from 'bcryptjs'
-import dbConnect from '@/lib/db'
-import User from '@/models/User'
+import type { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import bcrypt from "bcryptjs";
+import dbConnect from "./dbConnect";
+import User from "@/models/User";
 
 interface UserDocument {
   _id: string;
@@ -48,55 +48,42 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     }),
     CredentialsProvider({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log('Attempting to authorize user with email:', credentials?.email);
-        
         if (!credentials?.email || !credentials?.password) {
-          console.log('Missing email or password');
-          throw new Error('Необходимо указать email и пароль')
+          return null;
         }
 
-        await dbConnect()
-        console.log('Connected to database');
-
-        // Явно запрашиваем поле пароля с помощью .select('+password')
-        const user = await User.findOne({ email: credentials.email }).select('+password') as UserDocument | null
-        
-        if (!user) {
-          console.log('User not found');
-          throw new Error('Пользователь не найден')
-        }
-        
-        console.log('User found, checking password');
-        console.log('Password from DB exists:', !!user.password);
-
-        let isPasswordValid = false;
         try {
-          isPasswordValid = await bcrypt.compare(
+          await dbConnect();
+
+          const user = await User.findOne({ email: credentials.email });
+          if (!user) {
+            return null;
+          }
+
+          const isPasswordMatch = await bcrypt.compare(
             credentials.password,
             user.password
           );
+
+          if (!isPasswordMatch) {
+            return null;
+          }
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          };
         } catch (error) {
-          console.error('Error comparing passwords:', error);
-          throw new Error('Ошибка при проверке пароля');
-        }
-        
-        console.log('Password validation result:', isPasswordValid);
-
-        if (!isPasswordValid) {
-          throw new Error('Неверный пароль')
-        }
-
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
+          console.error("Authentication error:", error);
+          return null;
         }
       },
     }),
@@ -104,25 +91,25 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
-        token.role = user.role
+        token.id = user.id;
+        token.role = user.role;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id
-        session.user.role = token.role
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
-      return session
+      return session;
     },
   },
   pages: {
-    signIn: '/login',
-    error: '/login',
+    signIn: "/auth/login",
+    error: "/auth/error",
   },
   session: {
-    strategy: 'jwt' as const,
+    strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
-} 
+}; 

@@ -1,108 +1,125 @@
-import mongoose, { Document, Model, Schema } from 'mongoose'
+import mongoose, { Schema, Document, Model } from 'mongoose'
 
-export interface ICourse extends Document {
+export interface ILesson {
+  title: string
+  description: string
+  type: 'video' | 'text' | 'quiz'
+  content: string
+  duration?: number
+  order: number
+}
+
+export interface ICourse {
   title: string
   slug: string
   description: string
-  thumbnail: string
-  category: string
-  tags: string[]
-  lessons: mongoose.Types.ObjectId[]
-  requirements: string[]
-  level: 'beginner' | 'intermediate' | 'advanced'
-  duration: number // in minutes
-  published: boolean
-  featured: boolean
-  createdBy: mongoose.Types.ObjectId
-  students: mongoose.Types.ObjectId[]
-  rating: {
-    average: number
-    count: number
-  }
+  thumbnail?: string
+  category?: string
+  level?: 'beginner' | 'intermediate' | 'advanced'
+  duration?: number
+  featured?: boolean
+  tags?: string[]
+  requirements?: string[]
+  lessons: ILesson[]
   createdAt: Date
   updatedAt: Date
 }
 
-const CourseSchema = new Schema<ICourse>(
+export interface ICourseDocument extends ICourse, Document {}
+
+const LessonSchema = new Schema<ILesson>({
+  title: {
+    type: String,
+    required: [true, 'Заголовок урока обязателен'],
+    trim: true,
+  },
+  description: {
+    type: String,
+    required: [true, 'Описание урока обязательно'],
+  },
+  type: {
+    type: String,
+    enum: ['video', 'text', 'quiz'],
+    default: 'video',
+  },
+  content: {
+    type: String,
+    required: [true, 'Содержимое урока обязательно'],
+  },
+  duration: {
+    type: Number,
+  },
+  order: {
+    type: Number,
+    required: true,
+  },
+})
+
+const CourseSchema = new Schema<ICourseDocument>(
   {
     title: {
       type: String,
-      required: [true, 'Пожалуйста, укажите название курса'],
+      required: [true, 'Название курса обязательно'],
       trim: true,
-      maxlength: [100, 'Название не может превышать 100 символов'],
     },
     slug: {
       type: String,
-      required: [true, 'Пожалуйста, укажите slug курса'],
+      required: [true, 'Slug обязателен'],
       unique: true,
-      lowercase: true,
       trim: true,
+      lowercase: true,
     },
     description: {
       type: String,
-      required: [true, 'Пожалуйста, укажите описание курса'],
+      required: [true, 'Описание курса обязательно'],
     },
     thumbnail: {
       type: String,
-      required: [true, 'Пожалуйста, укажите миниатюру курса'],
     },
     category: {
       type: String,
-      required: [true, 'Пожалуйста, укажите категорию курса'],
+      enum: [
+        'programming',
+        'design',
+        'business',
+        'marketing',
+        'personal-development',
+        'other',
+      ],
     },
-    tags: [{
-      type: String,
-    }],
-    lessons: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Lesson',
-    }],
-    requirements: [{
-      type: String,
-    }],
     level: {
       type: String,
       enum: ['beginner', 'intermediate', 'advanced'],
-      default: 'beginner',
     },
     duration: {
       type: Number,
-      default: 0,
-    },
-    published: {
-      type: Boolean,
-      default: false,
     },
     featured: {
       type: Boolean,
       default: false,
     },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    students: [{
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-    }],
-    rating: {
-      average: {
-        type: Number,
-        default: 0,
-      },
-      count: {
-        type: Number,
-        default: 0,
-      },
-    },
+    tags: [String],
+    requirements: [String],
+    lessons: [LessonSchema],
   },
   { timestamps: true }
 )
 
-// Create a text index for search
+// Create indexes for search
 CourseSchema.index({ title: 'text', description: 'text', tags: 'text' })
 
-const Course: Model<ICourse> = mongoose.models.Course || mongoose.model<ICourse>('Course', CourseSchema)
+// Automatically update the course duration based on lesson durations
+CourseSchema.pre('save', function (next) {
+  if (this.lessons && this.lessons.length > 0) {
+    const totalDuration = this.lessons.reduce((sum, lesson) => {
+      return sum + (lesson.duration || 0)
+    }, 0)
+    this.duration = totalDuration
+  }
+  next()
+})
+
+const Course = (mongoose.models.Course as Model<ICourseDocument>) || 
+               mongoose.model<ICourseDocument>('Course', CourseSchema)
 
 export default Course 

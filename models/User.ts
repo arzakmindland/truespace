@@ -1,45 +1,45 @@
-import mongoose, { Document, Model, Schema } from 'mongoose'
+import mongoose, { Schema, Document, Model } from 'mongoose'
 import bcrypt from 'bcryptjs'
 
-export interface IUser extends Document {
+export interface IUser {
   name: string
   email: string
   password: string
   image?: string
   role: 'user' | 'admin'
-  favorites: mongoose.Types.ObjectId[]
-  savedCourses: mongoose.Types.ObjectId[]
-  watchHistory: {
-    lesson: mongoose.Types.ObjectId
+  favorites?: mongoose.Types.ObjectId[]
+  enrolledCourses?: {
+    course: mongoose.Types.ObjectId
     progress: number
-    lastWatched: Date
+    lastAccessed?: Date
   }[]
   createdAt: Date
   updatedAt: Date
+}
+
+export interface IUserDocument extends IUser, Document {
   comparePassword(candidatePassword: string): Promise<boolean>
 }
 
-const UserSchema = new Schema<IUser>(
+const UserSchema = new Schema<IUserDocument>(
   {
     name: {
       type: String,
-      required: [true, 'Please provide a name'],
-      maxlength: [50, 'Name cannot be more than 50 characters'],
+      required: [true, 'Имя обязательно'],
+      trim: true,
     },
     email: {
       type: String,
-      required: [true, 'Please provide an email'],
-      match: [
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-        'Please provide a valid email',
-      ],
+      required: [true, 'Email обязателен'],
       unique: true,
+      trim: true,
+      lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, 'Пожалуйста, введите корректный email'],
     },
     password: {
       type: String,
-      required: [true, 'Please provide a password'],
-      minlength: [6, 'Password must be at least 6 characters'],
-      select: false,
+      required: [true, 'Пароль обязателен'],
+      minlength: [6, 'Пароль должен содержать минимум 6 символов'],
     },
     image: {
       type: String,
@@ -49,34 +49,33 @@ const UserSchema = new Schema<IUser>(
       enum: ['user', 'admin'],
       default: 'user',
     },
-    favorites: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Lesson',
+    favorites: [{ 
+      type: Schema.Types.ObjectId, 
+      ref: 'Course' 
     }],
-    savedCourses: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Course',
-    }],
-    watchHistory: [{
-      lesson: {
-        type: Schema.Types.ObjectId,
-        ref: 'Lesson',
-        required: true,
+    enrolledCourses: [
+      {
+        course: {
+          type: Schema.Types.ObjectId,
+          ref: 'Course',
+          required: true,
+        },
+        progress: {
+          type: Number,
+          default: 0,
+          min: 0,
+          max: 100,
+        },
+        lastAccessed: {
+          type: Date,
+        },
       },
-      progress: {
-        type: Number,
-        default: 0,
-      },
-      lastWatched: {
-        type: Date,
-        default: Date.now,
-      },
-    }],
+    ],
   },
   { timestamps: true }
 )
 
-// Hash password before saving
+// Middleware для хеширования пароля перед сохранением
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next()
   
@@ -89,13 +88,15 @@ UserSchema.pre('save', async function (next) {
   }
 })
 
-// Compare password method
+// Метод для сравнения паролей
 UserSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
-  return await bcrypt.compare(candidatePassword, this.password)
+  return bcrypt.compare(candidatePassword, this.password)
 }
 
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)
+// Проверяем, если модель уже существует, чтобы избежать переопределения
+const User = (mongoose.models.User as Model<IUserDocument>) || 
+             mongoose.model<IUserDocument>('User', UserSchema)
 
 export default User 
