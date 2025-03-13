@@ -5,8 +5,10 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { FiUser, FiVideo, FiStar, FiSearch, FiShield } from 'react-icons/fi'
+import { Suspense } from 'react'
 
-export default function Home() {
+// Main content component
+function HomeContent() {
   return (
     <main className="min-h-screen flex flex-col">
       <Navbar />
@@ -101,5 +103,18 @@ export default function Home() {
       
       <Footer />
     </main>
+  )
+}
+
+// Home page component with Suspense boundary
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex justify-center items-center bg-background">
+        <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   )
 } 

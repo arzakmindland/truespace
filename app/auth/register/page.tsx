@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
@@ -15,8 +15,10 @@ type RegisterFormValues = {
   confirmPassword: string
 }
 
-export default function RegisterPage() {
+// Component that uses client-side functionality
+function RegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -244,5 +246,18 @@ export default function RegisterPage() {
         </div>
       </motion.div>
     </div>
+  )
+}
+
+// Main page component with Suspense boundary
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex justify-center items-center bg-background">
+        <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   )
 } 

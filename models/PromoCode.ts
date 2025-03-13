@@ -88,9 +88,6 @@ PromoCodeSchema.pre('save', function (next) {
   next()
 })
 
-// Create index for code for efficient lookups
-PromoCodeSchema.index({ code: 1 })
-
 const PromoCode: Model<IPromoCode> = mongoose.models.PromoCode || mongoose.model<IPromoCode>('PromoCode', PromoCodeSchema)
 
 export default PromoCode 
