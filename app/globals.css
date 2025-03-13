@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: 255, 255, 255;
+  --background: 18, 18, 18;
+  --accent: 109, 40, 217;
+}
+
+body {
+  color: rgb(var(--foreground));
+  background: rgb(var(--background));
+  font-family: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-primary min-h-screen;
+  }
+  
+  h1 {
+    @apply text-3xl font-bold md:text-4xl;
+  }
+  
+  h2 {
+    @apply text-2xl font-bold md:text-3xl;
+  }
+  
+  h3 {
+    @apply text-xl font-bold md:text-2xl;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md transition-all duration-300 font-medium;
+  }
+  
+  .btn-primary {
+    @apply btn bg-accent text-white hover:bg-accent-light shadow-subtle hover:shadow-accent;
+  }
+  
+  .btn-secondary {
+    @apply btn border border-gray-700 hover:border-accent text-primary hover:text-accent;
+  }
+  
+  .card {
+    @apply bg-background-lighter rounded-lg p-6 shadow-subtle transition-all duration-300 hover:shadow-accent;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2 bg-background-light border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-accent text-primary;
+  }
+}
+
+/* Custom animations */
+.page-transition {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1E1E1E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6D28D9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8B5CF6;
+} 
