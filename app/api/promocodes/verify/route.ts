@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
-import dbConnect from '@/lib/db'
+import dbConnect from '@/lib/dbConnect'
 import PromoCode from '@/models/PromoCode'
 import User from '@/models/User'
 import { z } from 'zod'
