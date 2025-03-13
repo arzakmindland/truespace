@@ -59,6 +59,28 @@ export async function POST(req: NextRequest) {
     )
   } catch (error) {
     console.error('Registration error:', error)
+    
+    // Добавляем детальное логирование ошибок MongoDB
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      
+      // Проверка на ошибки уникальности MongoDB (дублирование email)
+      if (error.message.includes('duplicate key error') || error.message.includes('E11000')) {
+        return NextResponse.json(
+          { success: false, message: 'Пользователь с таким email уже существует' },
+          { status: 409 }
+        )
+      }
+      
+      // Проверка на ошибки подключения
+      if (error.message.includes('connect') || error.message.includes('ECONNREFUSED')) {
+        return NextResponse.json(
+          { success: false, message: 'Ошибка подключения к базе данных' },
+          { status: 500 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { success: false, message: 'Ошибка регистрации' },
       { status: 500 }

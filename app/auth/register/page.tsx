@@ -56,10 +56,19 @@ function RegisterForm() {
         }, 2000)
       }
     } catch (error: any) {
+      console.error('Registration error:', error)
+      
       if (error.response?.data?.message) {
         setError(error.response.data.message)
+      } else if (error.message) {
+        setError(`Ошибка: ${error.message}`)
       } else {
-        setError('Произошла ошибка при регистрации')
+        setError('Произошла неизвестная ошибка при регистрации')
+      }
+      
+      // Если ошибка связана с сетью, покажем специальное сообщение
+      if (error.message?.includes('Network Error')) {
+        setError('Ошибка сети. Проверьте подключение к интернету.')
       }
     } finally {
       setIsLoading(false)
