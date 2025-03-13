@@ -54,22 +54,39 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        console.log('Attempting to authorize user with email:', credentials?.email);
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log('Missing email or password');
           throw new Error('Необходимо указать email и пароль')
         }
 
         await dbConnect()
+        console.log('Connected to database');
 
-        const user = await User.findOne({ email: credentials.email }) as UserDocument | null
-
+        // Явно запрашиваем поле пароля с помощью .select('+password')
+        const user = await User.findOne({ email: credentials.email }).select('+password') as UserDocument | null
+        
         if (!user) {
+          console.log('User not found');
           throw new Error('Пользователь не найден')
         }
+        
+        console.log('User found, checking password');
+        console.log('Password from DB exists:', !!user.password);
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
+        let isPasswordValid = false;
+        try {
+          isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+        } catch (error) {
+          console.error('Error comparing passwords:', error);
+          throw new Error('Ошибка при проверке пароля');
+        }
+        
+        console.log('Password validation result:', isPasswordValid);
 
         if (!isPasswordValid) {
           throw new Error('Неверный пароль')
