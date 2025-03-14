@@ -1,5 +1,6 @@
 import { FiBookOpen, FiUsers, FiAward, FiCode } from 'react-icons/fi'
 import Link from 'next/link'
+import TeamMember from '@/components/TeamMember'
 
 export const metadata = {
   title: 'О нас - TrueSpace',
@@ -116,25 +117,6 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
       </div>
       <h3 className="text-lg font-medium mb-2">{title}</h3>
       <p className="text-secondary">{description}</p>
-    </div>
-  )
-}
-
-function TeamMember({ name, role, image }: { name: string, role: string, image: string }) {
-  return (
-    <div>
-      <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-4 border-2 border-accent/30">
-        <img 
-          src={image} 
-          alt={name} 
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = "https://via.placeholder.com/128x128?text=TrueSpace"
-          }}
-        />
-      </div>
-      <h3 className="text-lg font-medium">{name}</h3>
-      <p className="text-secondary">{role}</p>
     </div>
   )
 } 
