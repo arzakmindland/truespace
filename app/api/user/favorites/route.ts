@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import Course from "@/models/Course";
+import mongoose from "mongoose";
 
 // GET /api/user/favorites - Получить избранные курсы пользователя
 export async function GET(req: NextRequest) {
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Проверяем, что курс еще не в избранном
-    if (user.favorites && user.favorites.includes(courseId)) {
+    if (user.favorites && user.favorites.some(id => id.toString() === courseId)) {
       return NextResponse.json(
         { error: "Курс уже в избранном", alreadyFavorite: true },
         { status: 400 }
@@ -97,9 +98,9 @@ export async function POST(req: NextRequest) {
 
     // Добавляем курс в избранное
     if (!user.favorites) {
-      user.favorites = [courseId];
+      user.favorites = [new mongoose.Types.ObjectId(courseId)];
     } else {
-      user.favorites.push(courseId);
+      user.favorites.push(new mongoose.Types.ObjectId(courseId));
     }
     await user.save();
 

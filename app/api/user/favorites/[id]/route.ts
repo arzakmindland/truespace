@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
+import mongoose from "mongoose";
 
 // DELETE /api/user/favorites/[id] - Удалить курс из избранного
 export async function DELETE(
@@ -40,7 +41,7 @@ export async function DELETE(
     }
 
     // Проверяем, есть ли курс в избранном
-    if (!user.favorites || !user.favorites.includes(courseId)) {
+    if (!user.favorites || !user.favorites.some(id => id.toString() === courseId)) {
       return NextResponse.json(
         { error: "Курс не найден в избранном" },
         { status: 404 }

@@ -4,9 +4,10 @@ import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import dbConnect from "./dbConnect";
 import User from "@/models/User";
+import { Document } from "mongoose";
 
-interface UserDocument {
-  _id: string;
+interface UserDocument extends Document {
+  _id: any;
   name: string;
   email: string;
   password: string;
@@ -62,7 +63,8 @@ export const authOptions: NextAuthOptions = {
           await dbConnect();
 
           const user = await User.findOne({ email: credentials.email });
-          if (!user) {
+          
+          if (!user || !user.email || typeof user.password !== 'string') {
             return null;
           }
 
@@ -76,10 +78,10 @@ export const authOptions: NextAuthOptions = {
           }
 
           return {
-            id: user._id.toString(),
+            id: user._id ? user._id.toString() : "",
             email: user.email,
-            name: user.name,
-            role: user.role,
+            name: user.name || "",
+            role: user.role || "user",
           };
         } catch (error) {
           console.error("Authentication error:", error);
