@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import SearchContent from '@/components/SearchContent'
+import ClientWrapper from '@/components/ClientWrapper'
 
 export const metadata: Metadata = {
   title: 'Поиск курсов | TrueSpace',
@@ -8,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function SearchPage() {
   return (
-    <main>
+    <ClientWrapper>
       <SearchContent />
-    </main>
+    </ClientWrapper>
   )
 } 

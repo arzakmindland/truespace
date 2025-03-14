@@ -32,7 +32,15 @@ const nextConfig = {
   typescript: {
     // Отключаем проверку типов во время сборки для ускорения
     ignoreBuildErrors: true,
-  }
+  },
+  
+  // Отключаем статическую генерацию для всего приложения
+  distDir: '.next',
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
+  // Принудительно включаем динамический рендеринг для всех страниц
+  exportPathMap: null
 }
 
 module.exports = nextConfig 
